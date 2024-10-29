@@ -1,0 +1,48 @@
+# General Vivado temporary and generated files
+*.jou
+*.log
+*.str
+*.csv
+*.html
+*.xml
+*.backup*
+*.restore*
+*.wdb
+*.rpx
+*.bxml
+
+
+# Vivado project-specific files and directories
+*.hw/
+*.cache/
+*.ip_user_files/
+*.sim/
+*.runs/
+*.srcs/
+*.bd/
+*.xpr
+*.xsa
+*.tcl
+
+# Checkpoint, synthesis, and implementation files
+*.checkpoint/
+*.dcp
+*.drc
+*.rba
+*.bin
+*.xo
+
+# Simulation and waveform configuration files
+*.wcfg
+
+# For the project
+.dvt/*.auto*
+.dvt/*.ls
+telekomunikacja_projekt/telekomunikacja_projekt.gen/
+telekomunikacja_projekt/telekomunikacja_projekt.cache/
+telekomunikacja_projekt/telekomunikacja_projekt.hw/
+telekomunikacja_projekt/telekomunikacja_projekt.ip_user_files/
+telekomunikacja_projekt/telekomunikacja_projekt.runs/
+telekomunikacja_projekt/telekomunikacja_projekt.sim/
+telekomunikacja_projekt/telekomunikacja_projekt.srcs/utils_1/
+telekomunikacja_projekt/*_tb_behav.wcfg

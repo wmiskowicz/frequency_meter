@@ -1,0 +1,6 @@
+# Automatically identify and compile all the source files in the project directory.
+# DO NOT explicitly list files/directories in 'dvt_init_auto' sections. Use 'dvt_init' sections instead.
+-top+top_fpga
++dvt_init_auto
+
++dvt_skip_compile+$DVT_PROJECT_LOC\rtl\mouse\draw_mouse.sv
