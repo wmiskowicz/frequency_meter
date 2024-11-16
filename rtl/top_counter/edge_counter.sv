@@ -4,7 +4,7 @@ module counter(
     input   logic        enable,
     input   logic        inc,
 
-    output  logic [31:0] counter
+    output  logic [15:0] counter
 );
  logic en_prev;
 

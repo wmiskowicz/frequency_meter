@@ -22,14 +22,18 @@
   */
   logic locked;
   wire rst, clk;
-  wire [31:0] counter;
-  wire enable;   
+  wire [15:0] counter;
+  wire enable;  
+  wire pulse_signal;
+
+  axi_if axis();
 
   assign rst = btnC;
   assign led[0] = locked; 
   assign led[1] = enable;
 
 
+  // PLL
   clk_wiz_0 u_clk_wiz_0 (
     .clk_in1(clk_in1),
     .locked (locked),
@@ -38,23 +42,35 @@
     .clk    (clk)
   );
 
+  // Pulse source
+  top_mouse u_top_mouse (
+    .clk     (clk),
+    .rst     (rst),
+    .ps2_clk (PS2Clk),
+    .ps2_data(PS2Data),
+    .right   (),
+    .left    (pulse_signal)   
+ );
 
+ // AXI master
  top_counter u_top_counter (
-   .PS2Clk (PS2Clk),
-   .PS2Data(PS2Data),
-   .clk    (clk),
-   .counter(counter),
-   .enable (enable),
-   .rst    (rst)
+  .clk    (clk),
+  .rst    (rst),
+  .enable (enable),
+  .pulse_signal(pulse_signal),
+  .axi    (axis)
  );
 
 
- sseg_controller u_sseg_controller (
-     .clk    (clk),
-     .counter(counter),
-     .rst    (rst),
-     .sseg   (seg),
-     .an     (an)
+ // AXI slave
+ sseg_controller #(
+  .COMPONENT_ID(8'h7F)
+ ) u_sseg_controller (
+  .clk    (clk),
+  .rst    (rst),
+  .sseg   (seg),
+  .an     (an),
+  .axi    (axis)
  );
 
  

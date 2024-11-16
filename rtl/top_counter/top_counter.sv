@@ -1,18 +1,23 @@
 module top_counter (
   input   logic        clk,
-  input   logic        rst,
-  
-  inout  PS2Clk,
-  inout  PS2Data,
-  // input logic left,
+  input   logic        rst,  
+  input   logic        pulse_signal,
 
-  output  logic [31:0] counter,
-  output  logic        enable
+  output  logic        enable,
+
+  axi_if.master        axi
 );
 
+  wire inc, send_packet;
+  wire [15:0] counter;
 
-  wire left;
-  wire inc;
+  axi_stream_master u_axi_master (
+    .axi        (axi),
+    .clk        (clk),
+    .data_in    ({16'b0, counter}),
+    .rst_n      (!rst),
+    .send_packet(send_packet)
+  );
 
   enable_toggle #(
     .COUNT_MAX(100_000_000)
@@ -23,25 +28,19 @@ module top_counter (
     .rst   (rst)
   );
 
-
-
- top_mouse u_top_mouse (
-    .clk     (clk),
-    .rst     (rst),
-    .ps2_clk (PS2Clk),
-    .ps2_data(PS2Data),
-    .right   (),
-    .left    (left)   
+  posedge_detector send_packet_enable (
+    .clk(clk),
+    .out(send_packet),
+    .rst(rst),
+    .sig(!enable)
  );
 
- posedge_detector u_posedge_detector (
+ posedge_detector increment (
     .clk(clk),
     .out(inc),
     .rst(rst),
-    .sig(left)
+    .sig(pulse_signal)
  );
-
-
 
  counter u_counter (
     .clk    (clk),

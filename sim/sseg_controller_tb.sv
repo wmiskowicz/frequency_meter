@@ -15,7 +15,8 @@ module sseg_controller_tb;
     );
 
     initial clk = 0;
-    always begin
+    always
+    begin
         #(CLK_PERIOD/2) clk = ~clk;
     end
 
@@ -23,14 +24,16 @@ module sseg_controller_tb;
         for (int i = 0; i < num_cycles; i++) @(posedge clk);
     endtask
 
-    initial begin
+    initial
+    begin
         rst = 1;
         counter = 0;
         wait_clock_cycles(2);
         rst = 0;
         wait_clock_cycles(2);
 
-        repeat (1000) begin
+        repeat (1000)
+        begin
             wait_clock_cycles(1);
             counter = counter + 32'd1;
         end
@@ -39,7 +42,8 @@ module sseg_controller_tb;
         $stop;
     end
 
-    initial begin
+    initial
+    begin
         $monitor("Time: %0t | Counter: %h | sseg: %b", $time, counter, sseg);
     end
 
