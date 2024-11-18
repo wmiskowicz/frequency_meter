@@ -38,6 +38,8 @@
 # For the project
 .dvt/*.auto*
 .dvt/*.ls
+.vscode/
+.dvt/.build_config_dict/
 telekomunikacja_projekt/telekomunikacja_projekt.gen/
 telekomunikacja_projekt/telekomunikacja_projekt.cache/
 telekomunikacja_projekt/telekomunikacja_projekt.hw/

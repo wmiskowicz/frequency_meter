@@ -4,7 +4,6 @@ module axi_stream_master_tb;
   logic rst_n;
   logic [31:0] data_in;
   logic send_packet;
-  logic send_mean;
 
   localparam int CLK_PERIOD = 10ns;
 
@@ -15,7 +14,6 @@ module axi_stream_master_tb;
     .rst_n(rst_n),
     .data_in(data_in),
     .send_packet(send_packet),
-    .send_mean(send_mean),
     .axi(axi.master)
   );
 
@@ -43,7 +41,6 @@ module axi_stream_master_tb;
   task  init_reset();
     rst_n = 0;
     send_packet = 0;
-    send_mean = 0;
     data_in = 32'hAABBCCDD;
 
     wait_clock_cycles(10);
@@ -56,7 +53,7 @@ module axi_stream_master_tb;
   );
     data_in = data;
     send_packet = 1;
-    axi.tready_in = 1;
+    axi.tready = 1;
     wait_clock_cycles(1);
     send_packet = 0;
     wait_clock_cycles(10);
@@ -65,9 +62,9 @@ module axi_stream_master_tb;
 
   always @(posedge clk) begin
     if ($urandom_range(1, 10) <= 7) begin
-      axi.tready_in <= 1; 
+      axi.tready <= 1; 
     end else begin
-      axi.tready_in <= 0;
+      axi.tready <= 0;
     end
   end
 

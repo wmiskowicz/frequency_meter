@@ -22,7 +22,6 @@
   */
   logic locked;
   wire rst, clk;
-  wire [15:0] counter;
   wire enable;  
   wire pulse_signal;
 
@@ -53,10 +52,12 @@
  );
 
  // AXI master
- top_counter u_top_counter (
+ top_counter #(
+  .CYCLLES_COUNT_MAX(100_000_000)
+ )u_top_counter (
   .clk    (clk),
   .rst    (rst),
-  .enable (enable),
+  .enable  (enable),
   .pulse_signal(pulse_signal),
   .axi    (axis)
  );

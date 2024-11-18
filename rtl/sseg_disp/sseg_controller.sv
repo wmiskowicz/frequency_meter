@@ -18,7 +18,7 @@ wire [31:0] data;
 // Instances
 
 axi_stream_slave #(
-  .PCK_SIZE(4),
+  .FRAME_SIZE(4),
   .ID_VALID(COMPONENT_ID)
 )
 u_axi_stream_slave (

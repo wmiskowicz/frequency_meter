@@ -1,5 +1,5 @@
 module axi_stream_slave#(
-    parameter int PCK_SIZE = 4,
+    parameter int FRAME_SIZE = 4,
     parameter ID_VALID = 8'h7F
   )(
     input  logic        clk,
@@ -13,7 +13,7 @@ module axi_stream_slave#(
 
 
   state_t state;
-  logic [7:0] data_buffer [3:0];
+  logic [FRAME_SIZE-1:0][7:0] data_buffer;
   logic [7:0] id_buffer;
   int i;
 
@@ -23,8 +23,8 @@ module axi_stream_slave#(
   begin : rx_fsm
     if (!rst_n)
     begin
-      state      <= IDLE;
-      for(int i=0; i < PCK_SIZE; i++) data_buffer[i] <= '0;
+      state       <= IDLE;
+      data_buffer <= '0;
     end
     else
     begin
@@ -47,7 +47,7 @@ module axi_stream_slave#(
           if(id_buffer == ID_VALID)
           begin
             state <= PAYLOAD;
-            data_buffer[i] <= axi.tdata;
+            data_buffer[0] <= axi.tdata;
             i <= 1;
           end
           else
@@ -59,7 +59,7 @@ module axi_stream_slave#(
         begin
           data_buffer[i] <= axi.tdata;
           state <= (axi.tlast) ? IDLE : PAYLOAD;
-          if (axi.tlast) rx_data <= {data_buffer[3], data_buffer[2], data_buffer[1], data_buffer[0]};
+          if (axi.tlast) rx_data <= data_buffer;
           i <= i + 1;
         end
         WAIT : state <= (axi.tlast) ? IDLE : WAIT;
