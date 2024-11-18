@@ -54,7 +54,8 @@
  // AXI master
  top_counter #(
   .CYCLLES_COUNT_MAX(100_000_000)
- )u_top_counter (
+ )
+ u_top_counter (
   .clk    (clk),
   .rst    (rst),
   .enable  (enable),
@@ -66,13 +67,16 @@
  // AXI slave
  sseg_controller #(
   .COMPONENT_ID(8'h7F)
- ) u_sseg_controller (
+ ) 
+ u_sseg_controller (
   .clk    (clk),
   .rst    (rst),
   .sseg   (seg),
   .an     (an),
   .axi    (axis)
  );
+
+ 
 
  
  

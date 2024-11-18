@@ -12,9 +12,11 @@ module top_counter #(
   wire inc, send_packet;
   wire [15:0] counter;
 
+  
   axi_stream_master #(
     .FRAME_SIZE(4)
-  )u_axi_master (
+  )
+  u_axi_master (
     .axi        (axi),
     .clk        (clk),
     .data_in    (counter),
@@ -31,26 +33,22 @@ module top_counter #(
     .rst   (rst)
   );
 
-  posedge_detector send_packet_enable (
-    .clk(clk),
-    .out(send_packet),
-    .rst(rst),
-    .sig(!enable)
- );
 
- posedge_detector increment (
-    .clk(clk),
-    .out(inc),
-    .rst(rst),
-    .sig(pulse_signal)
- );
 
- counter u_counter (
-    .clk    (clk),
-    .rst    (rst),
-    .enable (enable),
-    .inc    (inc),
-    .counter(counter)
- );
+  posedge_detector increment (
+     .clk(clk),
+     .out(inc),
+     .rst(rst),
+     .sig(pulse_signal)
+  );
+ 
+  counter u_counter (
+     .clk    (clk),
+     .rst    (rst),
+     .enable (enable),
+     .inc    (inc),
+     .send_packet(send_packet),
+     .counter(counter)
+  );
 
 endmodule
