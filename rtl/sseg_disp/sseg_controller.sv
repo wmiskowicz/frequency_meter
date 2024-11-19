@@ -25,6 +25,7 @@ u_axi_stream_slave (
   .clk  (clk),
   .rst_n(!rst),
   .rx_data(data),
+  .select(),
   .axi  (axi)
 );
 

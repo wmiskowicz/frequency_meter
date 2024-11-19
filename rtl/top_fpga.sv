@@ -64,7 +64,7 @@
  );
 
 
- // AXI slave
+ // AXI slaves
  sseg_controller #(
   .COMPONENT_ID(8'h7F)
  ) 
@@ -76,10 +76,14 @@
   .axi    (axis)
  );
 
- 
-
- 
- 
+ data_mem #(
+   .COMPONENT_ID(8'h7A)
+ )
+ u_data_mem (
+   .clk(clk),
+   .rst(rst),
+   .axi(axis)
+ );
  
  endmodule
  

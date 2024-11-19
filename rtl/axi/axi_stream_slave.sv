@@ -5,6 +5,7 @@ module axi_stream_slave#(
     input  logic        clk,
     input  logic        rst_n,
     output logic [31:0] rx_data, 
+    output logic        select,
 
     axi_if.slave        axi
   );
@@ -25,6 +26,7 @@ module axi_stream_slave#(
     begin
       state       <= IDLE;
       data_buffer <= '0;
+      select      <= '0;
     end
     else
     begin
@@ -41,6 +43,7 @@ module axi_stream_slave#(
             state <= IDLE;
           end
           i <= 0;
+          select <= '0;
         end
         ID:
         begin
@@ -48,6 +51,7 @@ module axi_stream_slave#(
           begin
             state <= PAYLOAD;
             data_buffer[0] <= axi.tdata;
+            select <= '1;
             i <= 1;
           end
           else
