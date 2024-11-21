@@ -3,12 +3,12 @@
  module top_fpga (
      input   logic       clk_in1,
      input   logic       btnC,
+     input   logic       sw0,
 
      inout   logic       PS2Clk,
      inout   logic       PS2Data,
  
      output  logic [1:0] led,
-     output  logic [1:0] sw,
      output  logic [6:0] seg,
      output  logic [3:0] an
  );
@@ -23,7 +23,9 @@
   logic locked;
   wire rst, clk;
   wire enable;  
+  wire mouse_signal, random;
   wire pulse_signal;
+  wire [11:0] xpos;
 
   axi_if axis();
 
@@ -31,24 +33,33 @@
   assign led[0] = locked; 
   assign led[1] = enable;
 
+  assign pulse_signal = sw0 ? mouse_signal : random;
+
 
   // PLL
   clk_wiz_0 u_clk_wiz_0 (
     .clk_in1(clk_in1),
     .locked (locked),
     .reset  (rst),
-
     .clk    (clk)
   );
 
-  // Pulse source
+  // Pulse sources
   top_mouse u_top_mouse (
     .clk     (clk),
     .rst     (rst),
     .ps2_clk (PS2Clk),
     .ps2_data(PS2Data),
+    .xpos    (xpos),
     .right   (),
-    .left    (pulse_signal)   
+    .left    (mouse_signal)   
+ );
+
+ random_generator u_random_bit_generator (
+   .clk       (clk),
+   .rst       (rst),
+   .xpos      (xpos),
+   .random    (random)
  );
 
  // AXI master
