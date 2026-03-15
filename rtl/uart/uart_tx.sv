@@ -7,7 +7,8 @@ module uart_tx#(
   input wire start_tx,
   input wire [7:0] tx_data,
 
-  output logic tx
+  output logic tx,
+  output logic busy
 );
 
 localparam UART_PERIOD_CYCLES = CLK_FREQ / BAUD_RATE;
@@ -24,7 +25,7 @@ typedef enum bit [4:0] {
 tx_state_t tx_state;
 
 logic [7:0] tx_data_q;
-logic [4:0] bit_ind;
+logic [3:0] bit_ind;
 logic tx_q;
 logic [UART_CTR_WIDTH-1:0] uart_ctr;
 
@@ -39,6 +40,7 @@ always_ff @ (posedge clk) begin
     tx_state <= IDLE;
     bit_ind <= 4'd0;
     tx_q <= 1'b1;
+    busy <= 1'b0;
   end
   else begin
     case (tx_state)
@@ -48,7 +50,12 @@ always_ff @ (posedge clk) begin
           tx_data_q <= tx_data;
           tx_state <= START;
           uart_ctr <= UART_CTR_WIDTH'(0);
+          busy <= 1'b1;
         end
+        else begin
+          busy <= 1'b0;
+        end
+        
         bit_ind <= 4'd0;
         tx_q <= 1'b1;
       end
@@ -94,6 +101,7 @@ always_ff @ (posedge clk) begin
         if (uart_ctr == UART_PERIOD_CYCLES) begin
           tx_state <= IDLE;
           uart_ctr <= UART_CTR_WIDTH'(0);
+          busy <= 1'b0;
         end
         else begin
           uart_ctr <= uart_ctr + UART_CTR_WIDTH'(1);

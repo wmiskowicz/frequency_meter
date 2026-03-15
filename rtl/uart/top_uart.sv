@@ -1,18 +1,25 @@
 
 module top_uart#(
-  BAUD_RATE = 9600
+  parameter BAUD_RATE = 9600,
+  parameter CLK_FREQ = 100_000_000,
+  parameter TX_ID,
+  parameter RX_ID
 )(
   input wire clk,
   input wire rst,
   input wire rx,
 
-  output logic tx
+  output logic tx,
+  axi_if.slave axis_tx
 );
   
 wire [7:0] rx_data;
 wire read_valid;
 
-uart_rx u_uart_rx (
+uart_rx #(
+  .CLK_FREQ(CLK_FREQ),
+  .BAUD_RATE(BAUD_RATE)
+)u_uart_rx (
   .clk     (clk),
   .rst     (rst),
   .rx      (rx),
@@ -23,7 +30,7 @@ uart_rx u_uart_rx (
 
 fifo_generator_0 fifo_rx (
   .clk(clk),   
-  .rst(rst),  
+  .srst(rst),  
   .din(rx_data),   
   .wr_en(read_valid), 
   .rd_en(), 
@@ -31,5 +38,20 @@ fifo_generator_0 fifo_rx (
   .full(),
   .empty()
 );
+
+
+top_uart_tx #(
+  .TX_ID    (TX_ID),
+  .CLK_FREQ (CLK_FREQ),
+  .BAUD_RATE(BAUD_RATE)
+)
+u_top_uart_tx (
+  .axis(axis_tx),
+  .clk(clk),
+  .rst(rst),
+  .tx (tx)
+);
+
+
 
 endmodule

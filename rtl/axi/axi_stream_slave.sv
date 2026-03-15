@@ -4,13 +4,14 @@ module axi_stream_slave#(
   )(
     input  logic        clk,
     input  logic        rst_n,
-    output logic [31:0] rx_data, 
+    output logic [(FRAME_SIZE*8)-1:0] rx_data, 
     output logic        select,
+    output logic        data_valid,
 
     axi_if.slave        axi
   );
 
-  typedef enum {IDLE, ID, PAYLOAD, WAIT} state_t;
+  typedef enum {IDLE, ID, PAYLOAD, RESULT, WAIT} state_t;
 
 
   state_t state;
@@ -27,45 +28,43 @@ module axi_stream_slave#(
       state       <= IDLE;
       data_buffer <= '0;
       select      <= '0;
+      data_valid  <= 1'b0;
     end
     else
     begin
       case (state)
+
         IDLE:
         begin
           if(axi.tvalid)
           begin
-            state <= ID;
-            id_buffer <= axi.tdata;
+            state <= (axi.tdata == ID_VALID) ? PAYLOAD : IDLE;
+            select <= (axi.tdata == ID_VALID);
           end
           else
           begin
             state <= IDLE;
           end
           i <= 0;
-          select <= '0;
+          data_valid <= 1'b0;
         end
-        ID:
-        begin
-          if(id_buffer == ID_VALID)
-          begin
-            state <= PAYLOAD;
-            data_buffer[0] <= axi.tdata;
-            select <= '1;
-            i <= 1;
-          end
-          else
-          begin
-            state <= WAIT;
-          end
-        end
+
         PAYLOAD:
         begin
           data_buffer[i] <= axi.tdata;
-          state <= (axi.tlast) ? IDLE : PAYLOAD;
-          if (axi.tlast) rx_data <= data_buffer;
+          state <= (axi.tlast) ? RESULT : PAYLOAD;
+          select <= !(axi.tlast);
           i <= i + 1;
         end
+
+        RESULT:
+        begin 
+          rx_data <= data_buffer;
+          data_valid <= 1'b1;
+          state <= IDLE;
+          select <= 1'b0;
+        end
+
         WAIT : state <= (axi.tlast) ? IDLE : WAIT;
         default: state <= IDLE;
       endcase
