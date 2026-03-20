@@ -1,6 +1,8 @@
  `timescale 1 ns / 1 ps
 
-module top_fpga (
+module top_fpga#(
+  parameter COUNT_CYCLES = 100_000_000
+) (
   input   logic       clk_in1,
   input   logic       btnC,
   input   logic       sw0,
@@ -24,65 +26,32 @@ module top_fpga (
  */
 logic locked;
 wire rst, clk;
-wire enable;
-wire mouse_signal, random;
-wire pulse_signal;
-wire [11:0] xpos;
+wire enable_counting;
 
 axi_if axis();
 
 assign rst = btnC;
 assign led[0] = locked;
-assign led[1] = enable;
+assign led[1] = enable_counting;
 
-assign pulse_signal = sw0 ? mouse_signal : random;
 
 
 // PLL
 clk_wiz_0 u_clk_wiz_0 (
   .clk_in1(clk_in1),
   .locked (locked),
-  .reset  (rst),
+  .reset  (1'b0),
   .clk    (clk)
 );
 
-main_fsm u_main_fsm (
-  .clk  (clk),
-  .rst  (rst),
-  .RsRx (RsRx),
-  .RsTx (RsTx),
-  .state()
-);
+// main_fsm u_main_fsm (
+//   .clk  (clk),
+//   .rst  (rst),
+//   .RsRx (RsRx),
+//   .RsTx (RsTx),
+//   .state()
+// );
 
-// Pulse sources
-top_mouse u_top_mouse (
-  .clk     (clk),
-  .rst     (rst),
-  .ps2_clk (PS2Clk),
-  .ps2_data(PS2Data),
-  .xpos    (xpos),
-  .right   (),
-  .left    (mouse_signal)
-);
-
-random_generator u_random_bit_generator (
-  .clk       (clk),
-  .rst       (rst),
-  .xpos      (xpos),
-  .random    (random)
-);
-
-// AXI master
-top_counter #(
-  .CYCLLES_COUNT_MAX(100_000_000)
-)
-u_top_counter (
-  .clk    (clk),
-  .rst    (rst),
-  .enable  (enable),
-  .pulse_signal(pulse_signal),
-  .axi    (axis)
-);
 
 
 // AXI slaves
@@ -104,6 +73,21 @@ u_data_mem (
   .clk(clk),
   .rst(rst),
   .axi(axis)
+);
+
+
+pulse_counter_top #(
+  .COUNT_CYCLES(COUNT_CYCLES)
+)
+u_pulse_counter_top (
+  .clk          (clk),
+  .rst          (rst),
+  .source_select(sw0),
+  .enable_counting(enable_counting),
+
+  .PS2Clk       (PS2Clk),
+  .PS2Data      (PS2Data),
+  .axi          (axis)
 );
 
 endmodule

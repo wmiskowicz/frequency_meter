@@ -28,10 +28,10 @@ wire fifo_full;
 assign start_tx = !fifo_empty && !tx_busy;
 
 always_comb begin
-  axi.tdata = axis.tdata;
-  axi.tlast = axis.tlast;
+  axis.tdata = axis.tdata;
+  axis.tlast = axis.tlast;
   axis.tready = !fifo_full;
-  axi.tvalid = axis.tvalid;
+  axis.tvalid = axis.tvalid;
 end
 
 

@@ -10,7 +10,8 @@ module top_uart#(
   input wire rx,
 
   output logic tx,
-  axi_if.slave axis_tx
+  axi_if.slave axis_tx,
+  axi_if.slave axis_rx
 );
   
 wire [7:0] rx_data;
