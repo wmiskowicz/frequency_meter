@@ -19,7 +19,8 @@ axi_stream_master #(
 u_axi_master (
   .axi        (axi),
   .clk        (clk),
-  .data_in    (counter),
+  .data_in    ({16'd0, counter}),
+  .id         (8'h7F),
   .rst_n      (!rst),
   .send_packet(send_packet)
 );

@@ -6,6 +6,7 @@ module pulse_counter_top#(
   input wire clk,
   input wire rst,
   input wire source_select,
+  input wire start_measurment,
 
   output logic enable_counting,
   inout PS2Clk,
@@ -16,7 +17,6 @@ module pulse_counter_top#(
 
 wire mouse_signal, random;
 wire pulse_signal;
-wire [11:0] xpos;
 
 assign pulse_signal = source_select ? mouse_signal : random;
 
@@ -26,16 +26,16 @@ top_mouse u_top_mouse (
   .rst     (rst),
   .ps2_clk (PS2Clk),
   .ps2_data(PS2Data),
-  .xpos    (xpos),
+  .xpos    (),
   .right   (),
   .left    (mouse_signal)
 );
 
 random_generator u_random_bit_generator (
-  .clk       (clk),
-  .rst       (rst),
-  .xpos      (xpos),
-  .random    (random)
+  .clk              (clk),
+  .rst              (rst),
+  .start_measurment (start_measurment),
+  .random           (random)
 );
 
 // AXI master

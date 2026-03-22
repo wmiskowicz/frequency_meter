@@ -17,6 +17,7 @@ logic RsTx;
 logic [1:0] led;
 logic [6:0] seg;
 logic [3:0] an;
+logic start_measurement;
 
 // Instantiate the Unit Under Test (UUT)
 top_fpga #(
@@ -24,6 +25,7 @@ top_fpga #(
 )uut (
   .clk_in1(clk_in1),
   .btnC(btnC),
+  .btnU(start_measurement),
   .sw0(sw0),
   .RsRx(RsRx),
   .PS2Clk(PS2Clk),
@@ -58,10 +60,11 @@ initial begin
 
   // Wait for PLL/Locked signal (if simulated)
   #200;
+  start_measurement = 1'b1;
 
   // Change switch mode halfway through
   #5000;
-  sw0 = 1;       // Switch to mouse signal mode
+  sw0 = 0;
 
   // Final wait as requested
   #10000;

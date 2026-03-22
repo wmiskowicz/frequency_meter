@@ -34,7 +34,7 @@ fifo_generator_0 fifo_rx (
   .srst(rst),  
   .din(rx_data),   
   .wr_en(read_valid), 
-  .rd_en(), 
+  .rd_en(1'b0), 
   .dout(),
   .full(),
   .empty()

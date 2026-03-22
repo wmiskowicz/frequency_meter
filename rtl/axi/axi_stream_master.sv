@@ -4,15 +4,14 @@ module axi_stream_master#(
   input  logic              clk, 
   input  logic              rst_n, 
    
-  input  logic    [15:0]    data_in,
+  input  logic    [(FRAME_SIZE*8)-1:0]    data_in,
+  input  logic    [7:0]     id,
   input  logic              send_packet, 
 
   axi_if.master             axi
 ); 
 
 typedef enum {IDLE, PAYLOAD} state_t;
-
-localparam ID_SSEG = 8'h7F;
 
 state_t state;
 logic [7:0] data_buffer [FRAME_SIZE : 0];
@@ -24,7 +23,7 @@ always_ff @(posedge clk) begin : tx_fsm
     axi.tdata  <= '0;
     axi.tlast  <= '0;
     axi.tvalid <= '0;
-    for(int i=0; i < 4; i++) data_buffer[i] <= '0;
+    for(int i=0; i < FRAME_SIZE; i++) data_buffer[i] <= '0;
   end 
   else
   begin
@@ -34,11 +33,11 @@ always_ff @(posedge clk) begin : tx_fsm
         if(send_packet)
         begin
           state <= PAYLOAD;
-          data_buffer[0] <= ID_SSEG; 
-          data_buffer[1] <= data_in[7:0]; 
-          data_buffer[2] <= data_in[15:8]; 
-          data_buffer[3] <= '0;
-          data_buffer[4] <= '0;
+          // axi.tvalid <= 1'b1;
+          data_buffer[0] <= id;           
+          for (int j = 0; j < 4; j++) begin
+            data_buffer[j+1] <= data_in[ (31 - j*8) -: 8 ]; 
+          end
         end
         else
         begin

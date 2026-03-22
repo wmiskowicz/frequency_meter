@@ -25,6 +25,7 @@ u_axi_stream_slave (
   .clk  (clk),
   .rst_n(!rst),
   .rx_data(data),
+  .module_ready(1'b1),
   .select(),
   .axi  (axi)
 );

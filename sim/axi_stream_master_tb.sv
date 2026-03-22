@@ -9,7 +9,7 @@ module axi_stream_master_tb;
 
   axi_if axi();
 
-  axi_stream_master dut (
+  axi_stream_master dut_master (
     .clk(clk),
     .rst_n(rst_n),
     .data_in(data_in),

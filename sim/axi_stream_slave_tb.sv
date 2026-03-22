@@ -12,6 +12,7 @@ module axi_stream_slave_tb;
   axi_stream_slave #(.PCK_SIZE(PCK_SIZE)) dut (
     .clk(clk),
     .rst_n(rst_n),
+    .module_ready(1'b1),
     .axi(axi.slave)
   );
 

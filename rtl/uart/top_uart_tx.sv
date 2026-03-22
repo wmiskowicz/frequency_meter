@@ -14,7 +14,6 @@ localparam FRAME_SIZE = 4;
 
 
 // ----- Local variables -----
-axi_if axi();
 wire start_tx;
 wire tx_busy;
 wire [7:0] tx_data;
@@ -27,13 +26,6 @@ wire fifo_full;
 // ----- Signal assignments -----
 assign start_tx = !fifo_empty && !tx_busy;
 
-always_comb begin
-  axis.tdata = axis.tdata;
-  axis.tlast = axis.tlast;
-  axis.tready = !fifo_full;
-  axis.tvalid = axis.tvalid;
-end
-
 
 // ----- Module logic -----
 
@@ -44,9 +36,10 @@ axi_stream_slave #(
 u_axi_stream_slave (
   .clk    (clk),
   .rst_n  (~rst),
-  .axi    (axi),
+  .axi    (axis),
 
   .rx_data(),
+  .module_ready((!fifo_full && !fifo_empty)),
   .select (select),
   .data_valid ()
 );
@@ -69,7 +62,7 @@ u_uart_tx (
 fifo_generator_0 fifo_tx (
   .clk(clk),   
   .srst(rst),  
-  .din(axi.tdata),   
+  .din(axis.tdata),   
   .wr_en(select), 
   .rd_en(start_tx), 
   .dout(tx_data),

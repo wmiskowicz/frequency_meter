@@ -35,6 +35,7 @@ axi_stream_slave #(
 u_axi_stream_slave (
   .clk  (clk),
   .rst_n(!rst),
+  .module_ready(1'b1),
   .rx_data(data),
   .select(select),
   .axi  (axi)
