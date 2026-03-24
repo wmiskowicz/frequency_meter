@@ -33,8 +33,8 @@ always_ff @(posedge clk) begin : tx_fsm
         if(send_packet)
         begin
           state <= PAYLOAD;
-          // axi.tvalid <= 1'b1;
-          data_buffer[0] <= id;           
+          axi.tvalid <= 1'b1;
+          axi.tdata <= id;
           for (int j = 0; j < 4; j++) begin
             data_buffer[j+1] <= data_in[ (31 - j*8) -: 8 ]; 
           end
@@ -43,7 +43,7 @@ always_ff @(posedge clk) begin : tx_fsm
         begin
           state <= IDLE;
         end
-        i <= 0;
+        i <= 1;
       end
       PAYLOAD:
       begin

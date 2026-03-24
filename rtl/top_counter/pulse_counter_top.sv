@@ -1,5 +1,3 @@
-
-
 module pulse_counter_top#(
   parameter COUNT_CYCLES = 100_000_000
 )(

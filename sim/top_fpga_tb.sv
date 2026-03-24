@@ -2,6 +2,15 @@
 
 module top_fpga_tb();
 
+// Parameters
+localparam CLK_FREQ  = 100_000_000;
+localparam BAUD_RATE = 115200;
+localparam BIT_TIME   = 1_000_000_000 / BAUD_RATE;
+localparam TX_ID     = 8'h01;
+localparam FRAME_SIZE = 4;
+localparam CLK_PER   = 10; // 100MHz
+localparam UART_TRANSMISSION_TIME = BIT_TIME * 11;
+
 // Inputs
 logic clk_in1;
 logic btnC;
@@ -19,9 +28,14 @@ logic [6:0] seg;
 logic [3:0] an;
 logic start_measurement;
 
+
+logic [7:0] captured_data;
+logic parity;
+
 // Instantiate the Unit Under Test (UUT)
 top_fpga #(
-  .COUNT_CYCLES(1000)
+  .COUNT_CYCLES(100_000),
+  .BAUD_RATE(BAUD_RATE)
 )uut (
   .clk_in1(clk_in1),
   .btnC(btnC),
@@ -72,5 +86,43 @@ initial begin
   $display("Simulation finished at %t", $time);
   $stop;
 end
+
+
+// ---- Tasks ----
+task wait_clock_cycles(input int num_cycles);
+  for (int i = 0; i < num_cycles; i++) @(posedge clk_in1);
+endtask
+
+
+always monitor_tx();
+
+task monitor_tx();
+
+  // Wait for Start Bit (falling edge)
+  @(negedge RsTx);
+  captured_data = 0;
+  $display("[Monitor] Start bit detected at %t", $time);
+
+  // Wait to reach middle of start bit
+  #(BIT_TIME / 2);
+
+  // Sample 8 data bits
+  for (int i = 0; i < 8; i++) begin
+    #(BIT_TIME);
+    captured_data[i] = RsTx;
+  end
+
+  // Sample Parity bit
+  #(BIT_TIME);
+  parity = RsTx;
+
+  // Sample Stop bit
+  #(BIT_TIME);
+  $display("[Monitor] Recieved data %s", captured_data);
+
+  if (parity !== (^captured_data))
+    $display("[Monitor] ERROR: Parity mismatch!");
+endtask
+
 
 endmodule

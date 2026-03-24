@@ -33,16 +33,17 @@ localparam CLK_FREQ_HZ = 100_000_000;
  */
 logic locked;
 wire rst, clk;
-wire enable_counting;
+wire enable_counting_toggle;
 
 axi_if sseg_axis();
 axi_if mem_axis();
+axi_if counter_axis();
 axi_if uart_tx_axis();
 axi_if uart_rx_axis();
 
 assign rst = btnC;
 assign led[0] = locked;
-assign led[1] = enable_counting;
+assign led[1] = enable_counting_toggle;
 
 
 
@@ -55,18 +56,15 @@ clk_wiz_0 u_clk_wiz_0 (
 );
 
 main_controller #(
-  .COUNT_CYCLES(COUNT_CYCLES)
-)u_main_controller (
+  .MAIN_CONT_ID(MAIN_CONT_ID)
+) u_main_controller (
   .clk  (clk),
   .rst  (rst),
-  .source_select(sw0),
-  .start_measurment(btnU),
-  .enable_counting(enable_counting),
+  .enable_toggle(enable_counting_toggle),
 
-  .PS2Clk       (PS2Clk),
-  .PS2Data      (PS2Data),
   .sseg_axis    (sseg_axis),
   .mem_axis     (mem_axis),
+  .counter_axis (counter_axis),
   .uart_tx_axis (uart_tx_axis),
   .uart_rx_axis (uart_rx_axis)
 );
@@ -74,6 +72,22 @@ main_controller #(
 
 
 // AXI slaves
+pulse_counter_top #(
+  .COUNT_CYCLES(COUNT_CYCLES)
+)
+u_pulse_counter_top (
+  .clk          (clk),
+  .rst          (rst),
+  .source_select(sw0),
+  .enable_counting(enable_counting_toggle),
+  .start_measurment(btnU),
+
+  .PS2Clk       (PS2Clk),
+  .PS2Data      (PS2Data),
+  .axi          (counter_axis)
+);
+
+
 sseg_controller #(
   .COMPONENT_ID(SSEG_ID)
 )

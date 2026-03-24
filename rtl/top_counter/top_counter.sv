@@ -9,6 +9,8 @@ module top_counter #(
   axi_if.master        axi
 );
 
+import component_id_pkg::*;
+
 wire inc, send_packet;
 wire [15:0] counter;
 
@@ -20,7 +22,7 @@ u_axi_master (
   .axi        (axi),
   .clk        (clk),
   .data_in    ({16'd0, counter}),
-  .id         (8'h7F),
+  .id         (MAIN_CONT_ID),
   .rst_n      (!rst),
   .send_packet(send_packet)
 );
