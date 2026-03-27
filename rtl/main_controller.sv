@@ -41,12 +41,14 @@ logic fifo_empty;
 
 // --- AXI ---
 logic [FRAME_SIZE*8-1:0] rx_data;
-logic [15:0] counter_val;
+logic [31:0] counter_val;
 logic send_packet, send_packet_q;
 logic counter_data_valid;
 logic master_busy;
 
 logic [3:0] uart_packet_ctr;
+wire [3:0]  bcd3, bcd2, bcd1, bcd0;
+
 
 
 // ---- Signal assignments ----
@@ -77,18 +79,19 @@ always_ff @ (posedge clk) begin
     case(main_state)
       
       IDLE: begin
-        if (counter_data_valid || send_to_uart) begin
-          counter_val <= rx_data[15:0];
-          main_state <= send_to_uart ? SEND_UART_TX : SEND_SSEG;
+        if (counter_data_valid) begin
+          counter_val <= rx_data;
+          main_state <= !enable_toggle ? SEND_UART_TX : SEND_SSEG;
         end
         else begin
           fifo_wr_en <= 1'b0;
         end
+        uart_packet_ctr <= 4'd0;
       end
 
       SEND_SSEG: begin
         if (!fifo_full) begin
-          fifo_data_in <= {SSEG_ID, 16'd0, counter_val};
+          fifo_data_in <= {SSEG_ID, 16'd0, counter_val[15:0]};
           fifo_wr_en <= 1'b1;
           main_state <= IDLE;
         end        
@@ -96,9 +99,16 @@ always_ff @ (posedge clk) begin
       
       SEND_UART_TX: begin
         if (!fifo_full) begin
-          fifo_data_in <= {UART_TX_ID, "CTR "};
+          case(uart_packet_ctr)
+            4'd0: fifo_data_in <= {UART_TX_ID, "CTR "};
+            4'd1: fifo_data_in <= {UART_TX_ID, "VAL "};
+            4'd2: fifo_data_in <= {UART_TX_ID, 8'(bcd3 + 8'h30), 8'(bcd2 + 8'h30), 8'(bcd1 + 8'h30), 8'(bcd0 + 8'h30)};
+            4'd3: fifo_data_in <= {UART_TX_ID, "  ", 8'hD, 8'hA};
+            default: fifo_data_in <= {UART_TX_ID, "ERR "};
+          endcase
+          uart_packet_ctr <= uart_packet_ctr + 4'd1;
           fifo_wr_en <= 1'b1;
-          main_state <= SEND_SSEG;
+          main_state <= uart_packet_ctr == 4'd3 ? SEND_SSEG : SEND_UART_TX;
         end  
       end
       
@@ -147,8 +157,7 @@ fifo_generator_2 master_fifo (
 
 
 axi_stream_slave #(
-  .FRAME_SIZE(4),
-  .ID_VALID  (MAIN_CONT_ID)
+  .FRAME_SIZE(4)
 )
 u_axi_stream_slave (
   .clk         (clk),
@@ -160,6 +169,18 @@ u_axi_stream_slave (
   .select      (),
 
   .axi         (counter_axis)
+);
+
+function [7:0] hex_to_ascii(input [3:0] nibble);
+    hex_to_ascii = (nibble < 10) ? (nibble + 8'h30) : (nibble + 8'h37);
+endfunction
+
+bin2bcd u_bin2bcd (
+    .bcd0(bcd0), 
+    .bcd1(bcd1), 
+    .bcd2(bcd2), 
+    .bcd3(bcd3), 
+    .bin (counter_val) 
 );
 
 endmodule

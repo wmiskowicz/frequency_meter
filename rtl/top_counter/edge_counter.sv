@@ -13,7 +13,7 @@ module counter(
  logic send_reset_packet;
  logic cyclic_send_packet;
 
- assign send_packet = send_reset_packet || cyclic_send_edge || negedge_enable;
+ assign send_packet = send_reset_packet || negedge_enable;
 
 
   always_ff @(posedge clk) begin

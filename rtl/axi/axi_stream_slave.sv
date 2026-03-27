@@ -1,6 +1,5 @@
 module axi_stream_slave#(
-    parameter int FRAME_SIZE = 4,
-    parameter ID_VALID = 8'h7F
+    parameter int FRAME_SIZE = 4
   )(
     input  logic        clk,
     input  logic        rst_n,
@@ -20,6 +19,7 @@ module axi_stream_slave#(
   int i;
 
   assign axi.tready = module_ready;
+  assign select = axi.tvalid;
 
   always_ff @(posedge clk)
   begin : rx_fsm
@@ -27,7 +27,6 @@ module axi_stream_slave#(
     begin
       state       <= IDLE;
       data_buffer <= '0;
-      select      <= '0;
       data_valid  <= 1'b0;
       rx_data     <= FRAME_SIZE'(0);
     end
@@ -40,7 +39,6 @@ module axi_stream_slave#(
           if(axi.tvalid)
           begin
             state <= PAYLOAD;
-            select <= 1'b1;
             data_buffer[FRAME_SIZE-1] <= axi.tdata;
           end
           else
@@ -55,7 +53,6 @@ module axi_stream_slave#(
         begin
           data_buffer[i] <= axi.tdata;
           state <= (axi.tlast) ? RESULT : PAYLOAD;
-          select <= !(axi.tlast);
           i <= i > 0 ? i - 1 : 0;
         end
 
@@ -64,7 +61,6 @@ module axi_stream_slave#(
           rx_data <= data_buffer;
           data_valid <= 1'b1;
           state <= IDLE;
-          select <= 1'b0;
           i <= FRAME_SIZE-1;
         end
 

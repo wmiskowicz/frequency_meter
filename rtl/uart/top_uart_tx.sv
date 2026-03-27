@@ -14,9 +14,9 @@ localparam FRAME_SIZE = 4;
 
 
 // ----- Local variables -----
-wire start_tx;
+(* MARK_DEBUG = "true" *)wire start_tx;
 wire tx_busy;
-wire [7:0] tx_data;
+(* MARK_DEBUG = "true" *) wire [7:0] tx_data;
 wire select;
 
 // ---- FIFO ----
@@ -24,14 +24,13 @@ wire fifo_empty;
 wire fifo_full;
 
 // ----- Signal assignments -----
-assign start_tx = !fifo_empty && !tx_busy;
+assign start_tx = ~(fifo_empty || tx_busy);
 
 
 // ----- Module logic -----
 
 axi_stream_slave #(
-  .FRAME_SIZE(FRAME_SIZE),
-  .ID_VALID  (TX_ID)
+  .FRAME_SIZE(FRAME_SIZE)
 )
 u_axi_stream_slave (
   .clk    (clk),
@@ -39,7 +38,7 @@ u_axi_stream_slave (
   .axi    (axis),
 
   .rx_data(),
-  .module_ready((!fifo_full && !fifo_empty)),
+  .module_ready(!fifo_full),
   .select (select),
   .data_valid ()
 );

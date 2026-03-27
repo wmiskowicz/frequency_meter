@@ -101,7 +101,6 @@ task monitor_tx();
   // Wait for Start Bit (falling edge)
   @(negedge RsTx);
   captured_data = 0;
-  $display("[Monitor] Start bit detected at %t", $time);
 
   // Wait to reach middle of start bit
   #(BIT_TIME / 2);
@@ -123,6 +122,5 @@ task monitor_tx();
   if (parity !== (^captured_data))
     $display("[Monitor] ERROR: Parity mismatch!");
 endtask
-
 
 endmodule
