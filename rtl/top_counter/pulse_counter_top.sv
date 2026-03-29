@@ -43,6 +43,7 @@ top_counter #(
 u_top_counter (
   .clk    (clk),
   .rst    (rst),
+  .start_measurment (start_measurment),
   .enable  (enable_counting),
   .pulse_signal(pulse_signal),
   .axi    (axi)

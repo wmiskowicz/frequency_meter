@@ -39,8 +39,8 @@ logic fifo_full;
 logic fifo_empty;
 
 // --- AXI ---
-logic [FRAME_SIZE*8-1:0] rx_data;
-logic [31:0] counter_val;
+logic [(FRAME_SIZE+1)*8-1:0] rx_data; // this frame includes ID
+logic [39:0] counter_frame, counter_frame_q;
 logic send_packet;
 logic counter_data_valid;
 logic master_busy;
@@ -63,7 +63,7 @@ localparam [63:0] MODE_CONST = {", mode ", NULL};
 // ---- Signal assignments ----
 assign mode = source_select ? {"mouse ", ENT, RET} : {"random", ENT, RET};
 assign ascii_ctr_val = {8'(bcd3 + 8'h30), 8'(bcd2 + 8'h30), 8'(bcd1 + 8'h30), 8'(bcd0 + 8'h30)};
-assign send_to_uart = (enable_toggle && !enable_toggle_q) || (!enable_toggle && enable_toggle_q);
+assign send_to_uart = (rx_data[39:32] == UART_TX_ID) && !enable_toggle;
 assign master_busy = axim.tvalid;
 assign send_packet = !fifo_empty && !master_busy;
 
@@ -71,9 +71,11 @@ assign send_packet = !fifo_empty && !master_busy;
 always_ff @ (posedge clk) begin
   if (rst) begin
     enable_toggle_q <= 1'b0;
+    counter_frame_q <= 40'd0;
   end
   else begin
     enable_toggle_q <= enable_toggle;
+    counter_frame_q <= counter_frame;
   end
 end
 
@@ -89,8 +91,8 @@ always_ff @ (posedge clk) begin
       
       IDLE: begin
         if (counter_data_valid) begin
-          counter_val <= rx_data;
-          main_state <= !enable_toggle ? SEND_UART_TX : SEND_SSEG;
+          counter_frame <= rx_data;
+          main_state <= send_to_uart ? SEND_UART_TX : SEND_SSEG;
         end
         else begin
           fifo_wr_en <= 1'b0;
@@ -100,7 +102,7 @@ always_ff @ (posedge clk) begin
 
       SEND_SSEG: begin
         if (!fifo_full) begin
-          fifo_data_in <= {SSEG_ID, 16'd0, counter_val[15:0]};
+          fifo_data_in <= {SSEG_ID, 16'd0, counter_frame[15:0]};
           fifo_wr_en <= 1'b1;
           main_state <= IDLE;
         end        
@@ -147,7 +149,7 @@ axi_stream_dmux u_axi_stream_dmux (
 
 
 axi_stream_master #(
-  .FRAME_SIZE(4)
+  .FRAME_SIZE(FRAME_SIZE)
 )
 u_axi_stream_master (
   .clk        (clk),
@@ -171,7 +173,7 @@ fifo_generator_2 master_fifo (
 
 
 axi_stream_slave #(
-  .FRAME_SIZE(4)
+  .FRAME_SIZE(FRAME_SIZE+1) // this frame includes id
 )
 u_axi_stream_slave (
   .clk         (clk),
@@ -194,7 +196,7 @@ bin2bcd u_bin2bcd (
     .bcd1(bcd1), 
     .bcd2(bcd2), 
     .bcd3(bcd3), 
-    .bin (counter_val) 
+    .bin (counter_frame_q) 
 );
 
 endmodule
