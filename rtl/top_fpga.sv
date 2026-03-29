@@ -51,16 +51,14 @@ assign led[1] = enable_counting_toggle;
 clk_wiz_0 u_clk_wiz_0 (
   .clk_in1(clk_in1),
   .locked (locked),
-  .reset  (1'b0),
-  .clk    (clk)
+  .clk_out1 (clk)
 );
 
-main_controller #(
-  .MAIN_CONT_ID(MAIN_CONT_ID)
-) u_main_controller (
+main_controller u_main_controller (
   .clk  (clk),
   .rst  (rst),
   .enable_toggle(enable_counting_toggle),
+  .source_select(sw0),
 
   .sseg_axis    (sseg_axis),
   .mem_axis     (mem_axis),

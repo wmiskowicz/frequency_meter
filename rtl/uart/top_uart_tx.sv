@@ -14,9 +14,9 @@ localparam FRAME_SIZE = 4;
 
 
 // ----- Local variables -----
-(* MARK_DEBUG = "true" *)wire start_tx;
+wire start_tx;
 wire tx_busy;
-(* MARK_DEBUG = "true" *) wire [7:0] tx_data;
+wire [7:0] tx_data;
 wire select;
 
 // ---- FIFO ----

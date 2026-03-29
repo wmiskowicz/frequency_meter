@@ -1,8 +1,7 @@
-module main_controller#(
-  parameter MAIN_CONT_ID
-)(
+module main_controller(
   input wire clk,
   input wire rst,
+  input wire source_select,
 
   input wire enable_toggle,
   
@@ -42,16 +41,28 @@ logic fifo_empty;
 // --- AXI ---
 logic [FRAME_SIZE*8-1:0] rx_data;
 logic [31:0] counter_val;
-logic send_packet, send_packet_q;
+logic send_packet;
 logic counter_data_valid;
 logic master_busy;
 
 logic [3:0] uart_packet_ctr;
 wire [3:0]  bcd3, bcd2, bcd1, bcd0;
+wire [63:0] mode;
+wire [31:0] ascii_ctr_val;
+
+localparam UART_FRAMES_COUNT_MAX = 8;
+localparam [7:0] ENT = 8'hD;
+localparam [7:0] RET = 8'hA;
+localparam [7:0] NULL = 8'h0;
+localparam [127:0] MSG_CONST = "Counter value = ";
+localparam [63:0] MODE_CONST = {", mode ", NULL};
+
 
 
 
 // ---- Signal assignments ----
+assign mode = source_select ? {"mouse ", ENT, RET} : {"random", ENT, RET};
+assign ascii_ctr_val = {8'(bcd3 + 8'h30), 8'(bcd2 + 8'h30), 8'(bcd1 + 8'h30), 8'(bcd0 + 8'h30)};
 assign send_to_uart = (enable_toggle && !enable_toggle_q) || (!enable_toggle && enable_toggle_q);
 assign master_busy = axim.tvalid;
 assign send_packet = !fifo_empty && !master_busy;
@@ -60,11 +71,9 @@ assign send_packet = !fifo_empty && !master_busy;
 always_ff @ (posedge clk) begin
   if (rst) begin
     enable_toggle_q <= 1'b0;
-    send_packet_q <= 1'b0;
   end
   else begin
     enable_toggle_q <= enable_toggle;
-    send_packet_q <= send_packet;
   end
 end
 
@@ -100,15 +109,20 @@ always_ff @ (posedge clk) begin
       SEND_UART_TX: begin
         if (!fifo_full) begin
           case(uart_packet_ctr)
-            4'd0: fifo_data_in <= {UART_TX_ID, "CTR "};
-            4'd1: fifo_data_in <= {UART_TX_ID, "VAL "};
-            4'd2: fifo_data_in <= {UART_TX_ID, 8'(bcd3 + 8'h30), 8'(bcd2 + 8'h30), 8'(bcd1 + 8'h30), 8'(bcd0 + 8'h30)};
-            4'd3: fifo_data_in <= {UART_TX_ID, "  ", 8'hD, 8'hA};
+            4'd0: fifo_data_in <= {UART_TX_ID, MSG_CONST[127:96]};
+            4'd1: fifo_data_in <= {UART_TX_ID, MSG_CONST[95:64]};
+            4'd2: fifo_data_in <= {UART_TX_ID, MSG_CONST[63:32]};
+            4'd3: fifo_data_in <= {UART_TX_ID, MSG_CONST[31:0]};
+            4'd4: fifo_data_in <= {UART_TX_ID, ascii_ctr_val};
+            4'd5: fifo_data_in <= {UART_TX_ID, MODE_CONST[63:32]};
+            4'd6: fifo_data_in <= {UART_TX_ID, MODE_CONST[31:0]};
+            4'd7: fifo_data_in <= {UART_TX_ID, mode[63:32]};
+            4'd8: fifo_data_in <= {UART_TX_ID, mode[31:0]};
             default: fifo_data_in <= {UART_TX_ID, "ERR "};
           endcase
           uart_packet_ctr <= uart_packet_ctr + 4'd1;
           fifo_wr_en <= 1'b1;
-          main_state <= uart_packet_ctr == 4'd3 ? SEND_SSEG : SEND_UART_TX;
+          main_state <= uart_packet_ctr == UART_FRAMES_COUNT_MAX ? SEND_SSEG : SEND_UART_TX;
         end  
       end
       
