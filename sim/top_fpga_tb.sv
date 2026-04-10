@@ -31,6 +31,7 @@ logic start_measurement;
 
 logic [7:0] captured_data;
 logic parity;
+byte msg_queue[$];
 
 // Instantiate the Unit Under Test (UUT)
 top_fpga #(
@@ -119,8 +120,29 @@ task monitor_tx();
   #(BIT_TIME);
   $display("[Monitor] Recieved data %s", captured_data);
 
-  if (parity !== (^captured_data))
-    $display("[Monitor] ERROR: Parity mismatch!");
+  if (parity !== (^captured_data)) begin
+    $display("[Monitor] ERROR: Parity mismatch! (Data: 0x%h)", captured_data);
+  end else begin
+    msg_queue.push_back(captured_data);
+    
+    if (captured_data == 8'h0A) begin
+      display_and_clear_stash();
+    end
+  end
+endtask
+
+
+task display_and_clear_stash();
+  automatic string full_msg = "";
+  
+  if (msg_queue.size() > 0) begin
+    foreach (msg_queue[i]) begin
+      full_msg = {full_msg, string'(msg_queue[i])};
+    end
+    
+    $display("[Monitor Message] %s", full_msg);
+    msg_queue.delete(); // Wyczyść kolejkę po wyświetleniu
+  end
 endtask
 
 endmodule
